@@ -2,12 +2,12 @@ class Transaction {
   final String id;
   final String title;
   final double amount;
-  final DateTime data;
+  final DateTime date;
 
   Transaction({
     this.id,
     this.title,
     this.amount,
-    this.data
+    this.date
   });
 }
