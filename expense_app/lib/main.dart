@@ -130,6 +130,58 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
+  List<Widget> _buildLandscapeContent(
+      bool isShowChart,
+      MediaQueryData mediaQuery,
+      PreferredSizeWidget appBar,
+      Widget transactionListWidget) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Show Chart',
+            style: Theme.of(context).textTheme.title,
+          ),
+          Switch.adaptive(
+            activeColor: Theme.of(context).accentColor,
+            value: _showChart,
+            onChanged: (value) {
+              setState(() {
+                _showChart = value;
+              });
+            },
+          ),
+        ],
+      ),
+      isShowChart
+        ? Container(
+          height: (mediaQuery.size.height
+              - appBar.preferredSize.height
+              - mediaQuery.padding.top)
+              * 0.7,
+          child: Chart(_recentTransactions),
+        )
+        : transactionListWidget,
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(
+      MediaQueryData mediaQuery,
+      PreferredSizeWidget appBar,
+      Widget transactionListWidget) {
+    return [
+      Container(
+        height: (mediaQuery.size.height
+            - appBar.preferredSize.height
+            - mediaQuery.padding.top)
+            * 0.3,
+        child: Chart(_recentTransactions),
+      ),
+      transactionListWidget,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -156,13 +208,6 @@ class _MyHomePageState extends State<MyHomePage>
           )
         ],
       );
-    final chart = Container(
-        height: (mediaQuery.size.height
-            - appBar.preferredSize.height
-            - mediaQuery.padding.top)
-            * (isLandscape ? 0.7 : 0.3),
-        child: Chart(_recentTransactions),
-    );
     final transactionList = Container(
       height: (mediaQuery.size.height
           - appBar.preferredSize.height
@@ -173,35 +218,9 @@ class _MyHomePageState extends State<MyHomePage>
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            isLandscape
-              ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    'Show Chart',
-                    style: Theme.of(context).textTheme.title,
-                  ),
-                  Switch.adaptive(
-                    activeColor: Theme.of(context).accentColor,
-                    value: _showChart,
-                    onChanged: (value) {
-                      setState(() {
-                        _showChart = value;
-                      });
-                    },
-                  ),
-                ],
-              )
-            : Container(),
-            // TODO YP: very creepy
-            isLandscape
-              ? _showChart ? chart : transactionList
-              : chart,
-            !isLandscape
-              ? transactionList
-              : Container()
-          ],
+          children: isLandscape
+            ? _buildLandscapeContent(_showChart, mediaQuery, appBar, transactionList)
+            : _buildPortraitContent(mediaQuery, appBar, transactionList),
         ),
       ),
     );
