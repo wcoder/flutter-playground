@@ -10,6 +10,7 @@ class CategoriesScreen extends StatelessWidget {
         title: const Text('DeliMeals'),
       ),
       body: GridView.builder(
+        padding: const EdgeInsets.all(25),
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 200,
           childAspectRatio: 3 / 2,
