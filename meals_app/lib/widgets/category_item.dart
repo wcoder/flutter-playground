@@ -1,29 +1,47 @@
 import 'package:flutter/material.dart';
+import '../models/category.dart';
+import '../routes.dart';
 
 class CategoryItem extends StatelessWidget {
-  final String title;
-  final Color color;
+  final Category category;
 
-  const CategoryItem(this.title, this.color);
+  const CategoryItem(this.category);
+
+  void _selectCategory(BuildContext ctx) {
+    Navigator.of(ctx).pushNamed(
+      Routes.categoryMeals,
+      arguments: {
+        'id': category.id,
+        'title': category.title,
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.title,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.7),
-            color,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final borderRadius = BorderRadius.circular(15);
+
+    return InkWell(
+      onTap: () => _selectCategory(context),
+      splashColor: Theme.of(context).primaryColor,
+      borderRadius: borderRadius,
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        child: Text(
+          category.title,
+          style: Theme.of(context).textTheme.title,
         ),
-        borderRadius: BorderRadius.circular(15),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              category.color.withOpacity(0.7),
+              category.color,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: borderRadius,
+        ),
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/dummy_data.dart';
 import '../widgets/category_item.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,8 +19,7 @@ class CategoriesScreen extends StatelessWidget {
         ),
         itemCount: DUMMY_CATEGORIES.length,
         itemBuilder: (context, index) {
-          final category = DUMMY_CATEGORIES[index];
-          return CategoryItem(category.title, category.color);
+          return CategoryItem(DUMMY_CATEGORIES[index]);
         },
       ),
     );
