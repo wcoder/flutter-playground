@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mealsapp/models/meal.dart';
+import '../routes.dart';
 
 class MealItem extends StatelessWidget {
   final Meal meal;
 
   const MealItem(this.meal);
 
+  // TODO YP: ugly (enum to string)
   String get complexityText {
     return meal.complexity.toString().split('.').last;
   }
@@ -14,14 +16,14 @@ class MealItem extends StatelessWidget {
     return meal.affordability.toString().split('.').last;
   }
 
-  void _selectMeal() {
-
+  void _selectMeal(BuildContext ctx) {
+    Navigator.of(ctx).pushNamed(Routes.mealDetail, arguments: meal.id);
   }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: _selectMeal,
+      onTap: () => _selectMeal(context),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
