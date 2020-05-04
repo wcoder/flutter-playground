@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {
+  final Map<String, bool> filters;
+  final Function saveFilters;
+
+  const SettingsPage(this.filters, this.saveFilters);
+
   @override
   State<StatefulWidget> createState() => _SettingsPageState();
 }
@@ -11,6 +16,16 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isVegetarian = false;
   bool _isLactoseFree = false;
 
+  @override
+  initState() {
+    super.initState();
+
+    _isGlutenFree = widget.filters['gluten'];
+    _isVegan = widget.filters['vegan'];
+    _isVegetarian = widget.filters['vegetarian'];
+    _isLactoseFree = widget.filters['lactose'];
+  }
+
   Widget _buildSwitchListTile(
     String title,
     String description,
@@ -19,9 +34,19 @@ class _SettingsPageState extends State<SettingsPage> {
     return SwitchListTile(
       title: Text(title),
       subtitle: Text(description),
-      value: _isGlutenFree,
+      value: currentValue,
       onChanged: changed,
     );
+  }
+
+  void _save() {
+    final Map<String, bool> filters = {
+      'gluten': _isGlutenFree,
+      'vegan': _isVegan,
+      'vegetarian': _isVegetarian,
+      'lactose': _isLactoseFree,
+    };
+    widget.saveFilters(filters);
   }
 
   @override
@@ -29,6 +54,12 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Settings'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: _save,
+          )
+        ],
       ),
       body: Column(
         children: <Widget>[
