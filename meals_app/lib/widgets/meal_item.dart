@@ -4,9 +4,9 @@ import '../routes.dart';
 
 class MealItem extends StatelessWidget {
   final Meal meal;
-  final Function removeItem;
+//  final Function removeItem;
 
-  const MealItem(this.meal, this.removeItem);
+  const MealItem(this.meal); // this.removeItem
 
   // TODO YP: ugly (enum to string)
   String get complexityText {
@@ -21,9 +21,9 @@ class MealItem extends StatelessWidget {
     final result = await Navigator.of(ctx).pushNamed(
       Routes.mealDetail,
       arguments: meal.id);
-    if (result != null) {
-      removeItem(result);
-    }
+//    if (result != null) {
+//      removeItem(result);
+//    }
   }
 
   @override

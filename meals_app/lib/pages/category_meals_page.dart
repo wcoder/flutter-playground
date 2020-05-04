@@ -49,7 +49,7 @@ class _CategoryMealsPageState extends State<CategoryMealsPage> {
       body: ListView.builder(
         itemCount: displayedMeals.length,
         itemBuilder: (ctx, index) {
-          return MealItem(displayedMeals[index], _removeMeal);
+          return MealItem(displayedMeals[index]); // _removeMeal
         },
       ),
     );
