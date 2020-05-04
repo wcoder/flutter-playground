@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mealsapp/services/dummy_data.dart';
+import '../services/dummy_data.dart';
 
 class MealDetailPage extends StatelessWidget {
 
@@ -92,6 +92,12 @@ class MealDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.delete),
+        onPressed: () {
+          Navigator.of(context).pop(mealId);
+        },
       ),
     );
   }
