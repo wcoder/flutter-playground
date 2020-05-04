@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shopapp/models/product.dart';
-import 'package:shopapp/screens/product_detail_screen.dart';
-
 import '../routes.dart';
 
 class ProductItem extends StatelessWidget {
@@ -9,13 +7,17 @@ class ProductItem extends StatelessWidget {
 
   const ProductItem(this.product);
 
+  void _selectItem(BuildContext context) {
+    Navigator.of(context).pushNamed(Routes.productDetail, arguments: product.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
         child: GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed(Routes.productDetail, arguments: product.id),
+          onTap: () => _selectItem(context),
           child: Image.network(
             product.imageUrl,
             fit: BoxFit.cover,
