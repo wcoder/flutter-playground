@@ -48,7 +48,10 @@ class CartScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               itemCount: cart.itemCount,
-              itemBuilder: (ctx, index) => CartItemWidget(cart.items.values.toList()[index]),
+              itemBuilder: (ctx, index) => CartItemWidget(
+                cart.items.values.toList()[index],
+                cart.items.keys.toList()[index],
+              ),
             ),
           ),
         ],
