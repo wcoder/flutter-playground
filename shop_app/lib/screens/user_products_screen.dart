@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:shopapp/providers/products.dart';
 import 'package:shopapp/widgets/user_product_item.dart';
 
+import '../routes.dart';
+
 class UserProductsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -13,7 +15,7 @@ class UserProductsScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
-
+              Navigator.of(context).pushNamed(Routes.editProduct);
             },
           )
         ],
@@ -23,10 +25,7 @@ class UserProductsScreen extends StatelessWidget {
           padding: EdgeInsets.all(8),
           child: ListView.builder(
             itemCount: products.items.length,
-            itemBuilder: (_, index) => UserProductItem(
-              products.items[index].title,
-              products.items[index].imageUrl,
-            ),
+            itemBuilder: (_, index) => UserProductItem(products.items[index]),
           ),
         ),
       ),

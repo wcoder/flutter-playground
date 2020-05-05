@@ -15,10 +15,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
 
-  String title;
-  double price;
-  String description;
-  String imageUrl;
+  String id;
+  String title = '';
+  double price = -1;
+  String description = '';
+  String imageUrl = '';
+
+  bool _isInit = true;
 
   @override
   void initState() {
@@ -28,12 +31,33 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   void dispose() {
+    _imageUrlFocusNode.removeListener(_updateImageUrl);
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
     _imageUrlFocusNode.dispose();
     _imageUrlController.dispose();
-    _imageUrlFocusNode.removeListener(_updateImageUrl);
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      final productId = ModalRoute.of(context).settings.arguments as String;
+      if (productId == null) {
+        return;
+      }
+      final product = Provider.of<Products>(context, listen: false).findById(productId);
+
+      id = product.id;
+      title = product.title;
+      price = product.price;
+      description = product.description;
+      imageUrl = product.imageUrl;
+
+      _imageUrlController.text = imageUrl;
+    }
+    _isInit = false;
+    super.didChangeDependencies();
   }
 
   void _updateImageUrl() {
@@ -52,14 +76,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _form.currentState.save();
 
     var product = Product(
-      id: null,
+      id: id,
       title: title,
       description: description,
       imageUrl: imageUrl,
       price: price,
     );
 
-    Provider.of<Products>(context, listen: false).addProduct(product);
+    final provider = Provider.of<Products>(context, listen: false);
+
+    if (id == null) {
+      provider.addProduct(product);
+    } else {
+      provider.updateProduct(id, product);
+    }
     Navigator.of(context).pop();
   }
 
@@ -67,7 +97,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Product'),
+        title: Text(id == null ? 'Add New Product' : 'Edit Product'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.save),
@@ -82,6 +112,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           child: ListView(
             children: <Widget>[
               TextFormField(
+                initialValue: title,
                 decoration: InputDecoration(
                   labelText: 'Title',
                 ),
@@ -98,6 +129,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 onSaved: (value) => title = value,
               ),
               TextFormField(
+                initialValue: price < 0 ? '' : price.toString(),
                 decoration: InputDecoration(
                   labelText: 'Price',
                 ),
@@ -122,6 +154,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 onSaved: (value) => price = double.parse(value),
               ),
               TextFormField(
+                initialValue: description,
                 decoration: InputDecoration(
                   labelText: 'Description',
                 ),
