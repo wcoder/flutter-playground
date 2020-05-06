@@ -5,4 +5,5 @@ class Routes {
   static const orders = '/orders';
   static const userProducts = '/user-products';
   static const editProduct = '/edit-product';
+  static const auth = '/auth';
 }
