@@ -11,16 +11,22 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final _auth = FirebaseAuth.instance;
 
+  var _isLoading = false;
+
   void _submitAuthForm(
     String email,
     String username,
     String password,
     bool isLogin,
-    BuildContext ctx
+    BuildContext ctx,
   ) async {
     AuthResult authResult;
 
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       if (isLogin) {
         authResult = await _auth.signInWithEmailAndPassword(email: email, password: password);
       } else {
@@ -39,6 +45,14 @@ class _AuthPageState extends State<AuthPage> {
       ));
     } catch (error) {
       print(error);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+
+    if (authResult == null) {
+      return;
     }
 
     //return authResult;
@@ -48,7 +62,7 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: AuthForm(_submitAuthForm),
+      body: AuthForm(_submitAuthForm, _isLoading),
     );
   }
 }
