@@ -1,3 +1,4 @@
+import 'package:chat_app/pages/auth_page.dart';
 import 'package:chat_app/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ChatPage(),
+      home: AuthPage(),//ChatPage(),
     );
   }
 }
