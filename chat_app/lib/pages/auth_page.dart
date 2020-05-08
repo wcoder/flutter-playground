@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/widgets/auth/auth_form.dart';
@@ -55,6 +56,10 @@ class _AuthPageState extends State<AuthPage> {
       return;
     }
 
+    Firestore.instance.collection("users").document(authResult.user.uid).setData({
+      "username": username,
+      "email": email,
+    });
     //return authResult;
   }
 
