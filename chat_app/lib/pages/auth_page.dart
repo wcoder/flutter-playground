@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/widgets/auth/auth_form.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +21,7 @@ class _AuthPageState extends State<AuthPage> {
     String email,
     String username,
     String password,
+    File imageFile,
     bool isLogin,
     BuildContext ctx,
   ) async {
@@ -29,11 +33,31 @@ class _AuthPageState extends State<AuthPage> {
       });
 
       if (isLogin) {
-        authResult = await _auth.signInWithEmailAndPassword(email: email, password: password);
+        authResult = await _auth.signInWithEmailAndPassword(
+            email: email, password: password);
       } else {
-        authResult = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+        authResult = await _auth.createUserWithEmailAndPassword(
+            email: email, password: password);
+
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child("user_images")
+            .child("${authResult.user.uid}.jpg");
+
+        await ref.putFile(imageFile).onComplete;
+
+        final url = await ref.getDownloadURL();
+
+        await Firestore.instance
+            .collection("users")
+            .document(authResult.user.uid)
+            .setData({
+          "username": username,
+          "email": email,
+          "image_url": url,
+        });
       }
-    } on PlatformException catch(error) {
+    } on PlatformException catch (error) {
       var message = "An error occured, please check your credentials!";
 
       if (error.message != null) {
@@ -46,21 +70,11 @@ class _AuthPageState extends State<AuthPage> {
       ));
     } catch (error) {
       print(error);
-    } finally {
+
       setState(() {
         _isLoading = false;
       });
     }
-
-    if (authResult == null) {
-      return;
-    }
-
-    Firestore.instance.collection("users").document(authResult.user.uid).setData({
-      "username": username,
-      "email": email,
-    });
-    //return authResult;
   }
 
   @override
