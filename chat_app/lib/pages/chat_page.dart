@@ -31,6 +31,7 @@ class _ChatPageState extends State<ChatPage> {
         return;
       },
     );
+    fbm.subscribeToTopic('chat');
 
   }
 
