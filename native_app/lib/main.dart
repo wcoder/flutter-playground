@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() => runApp(MyApp());
 
@@ -25,6 +26,17 @@ class _MyHomePageState extends State<MyHomePage> {
   int _batteryLevel;
 
   Future<void> _getBatteryLevel() async {
+    const platform = MethodChannel('samples.flutter.dev/battery');
+    try {
+      final batteryLevel = await platform.invokeMethod('getBatteryLevel');
+      setState(() {
+        _batteryLevel = batteryLevel;
+      });
+    } on PlatformException catch (error) {
+      setState(() {
+        _batteryLevel = null;
+      });
+    }
   }
 
   @override
