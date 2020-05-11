@@ -47,5 +47,9 @@
 	<string>We need access to let you pick an image.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to let you pick an image.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need access to your location to let you pick an image.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need access to your location to let you pick an image.</string>
 </dict>
 </plist>

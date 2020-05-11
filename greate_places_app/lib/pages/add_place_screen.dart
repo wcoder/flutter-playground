@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:greate_places_app/providers/great_places.dart';
 import 'package:greate_places_app/widgets/image_input.dart';
+import 'package:greate_places_app/widgets/location_input.dart';
 import 'package:provider/provider.dart';
 
 class AddPlacePage extends StatefulWidget {
@@ -24,7 +25,8 @@ class _AddPlacePageState extends State<AddPlacePage> {
       return;
     }
 
-    Provider.of<GreatPlaces>(context, listen: false).addPlace(_titleController.text, _pickedImage);
+    Provider.of<GreatPlaces>(context, listen: false)
+        .addPlace(_titleController.text, _pickedImage);
     Navigator.of(context).pop();
   }
 
@@ -49,8 +51,14 @@ class _AddPlacePageState extends State<AddPlacePage> {
                         decoration: InputDecoration(labelText: "Title"),
                         controller: _titleController,
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       ImageInput(_selectImage),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      LocationInput(),
                     ],
                   ),
                 ),
