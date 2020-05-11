@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:greate_places_app/routes.dart';
 
 class PlacesListPage extends StatelessWidget {
   @override
@@ -9,7 +10,9 @@ class PlacesListPage extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.add),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pushNamed(Routes.appPlace);
+            },
           )
         ],
       ),
