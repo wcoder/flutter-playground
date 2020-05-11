@@ -18,29 +18,32 @@ class PlacesListPage extends StatelessWidget {
           )
         ],
       ),
-      body: Center(
-        child: Consumer<GreatPlaces>(
-          child: Center(
-            child: Text("Got not places yet, start adding some!"),
-          ),
-          builder: (context, provider, child) {
-            if (provider.items.length <= 0) {
-              return child;
-            }
-            return ListView.builder(
-              itemCount: provider.items.length,
-              itemBuilder: (context, index) => ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: FileImage(provider.items[index].image),
-                ),
-                title: Text(provider.items[index].title),
-                onTap: () {
-                  // TODO:...
-                },
-              ),
+      body: FutureBuilder(
+        future: Provider.of<GreatPlaces>(context, listen: false)
+            .fetchAndSetPlaces(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
             );
-          },
-        ),
+          }
+          return Consumer<GreatPlaces>(
+            builder: (context, provider, child) {
+              return ListView.builder(
+                itemCount: provider.items.length,
+                itemBuilder: (context, index) => ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: FileImage(provider.items[index].image),
+                  ),
+                  title: Text(provider.items[index].title),
+                  onTap: () {
+                    // TODO:...
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
