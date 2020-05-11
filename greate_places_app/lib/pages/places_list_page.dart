@@ -36,6 +36,7 @@ class PlacesListPage extends StatelessWidget {
                     backgroundImage: FileImage(provider.items[index].image),
                   ),
                   title: Text(provider.items[index].title),
+                  subtitle: Text(provider.items[index].location.address),
                   onTap: () {
                     // TODO:...
                   },

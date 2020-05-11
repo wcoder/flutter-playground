@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:greate_places_app/helpers/location_helper.dart';
+import 'package:greate_places_app/models/place.dart';
 import 'package:greate_places_app/routes.dart';
 import 'package:location/location.dart';
 
 class LocationInput extends StatefulWidget {
+  final Function(double lat, double lng) onSelectPlace;
+
+  LocationInput(this.onSelectPlace);
+
   @override
   _LocationInputState createState() => _LocationInputState();
 }
@@ -11,23 +16,29 @@ class LocationInput extends StatefulWidget {
 class _LocationInputState extends State<LocationInput> {
   String _previewImageUrl;
 
-  Future<void> _getCurrentUserLocation() async {
-    final locationData = await Location().getLocation();
+  void _showPreview(double lat, double lng) {
     final locationPreviewUrl = LocationHelper.generateLocationPreviewImage(
-      longitude: locationData.longitude,
-      latitude: locationData.latitude,
+      latitude: lat,
+      longitude: lng,
     );
     setState(() {
       _previewImageUrl = locationPreviewUrl;
     });
   }
 
+  Future<void> _getCurrentUserLocation() async {
+    final locationData = await Location().getLocation();
+    _showPreview(locationData.latitude, locationData.longitude);
+    widget.onSelectPlace(locationData.latitude, locationData.longitude);
+  }
+
   Future<void> _selectOnMap() async {
-    final selectedLocation = await Navigator.of(context).pushNamed(Routes.map);
+    final selectedLocation = await Navigator.of(context).pushNamed(Routes.map) as PlaceLocation;
     if (selectedLocation == null) {
       return;
     }
-    print(selectedLocation);
+    _showPreview(selectedLocation.latitude, selectedLocation.longitude);
+    widget.onSelectPlace(selectedLocation.latitude, selectedLocation.longitude);
   }
 
   @override

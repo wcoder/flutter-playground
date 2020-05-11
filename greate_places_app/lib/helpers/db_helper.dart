@@ -9,7 +9,7 @@ class DatabaseHelper {
       path.join(dbPath, "places.db"),
       onCreate: (db, version) async {
         await db.execute(
-            "CREATE TABLE places (id TEXT PRIMARY KEY, title TEXT, image TEXT)");
+            "CREATE TABLE places (id TEXT PRIMARY KEY, title TEXT, image TEXT, loc_lat REAL, loc_lng REAL, address TEXT)");
       },
       version: 1,
     );
