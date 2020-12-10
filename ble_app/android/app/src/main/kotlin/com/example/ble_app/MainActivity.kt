@@ -1,4 +1,4 @@
-package com.example.ble_app
+package com.softeq.flutter_ble_app
 
 import io.flutter.embedding.android.FlutterActivity
 
