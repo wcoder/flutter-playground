@@ -1,6 +1,6 @@
-import 'package:ble_app/widgets/characteristic_tile.dart';
-import 'package:ble_app/widgets/descriptor_tile.dart';
-import 'package:ble_app/widgets/service_tile.dart';
+import 'package:ble_app/flutter_blue/widgets/characteristic_tile.dart';
+import 'package:ble_app/flutter_blue/widgets/descriptor_tile.dart';
+import 'package:ble_app/flutter_blue/widgets/service_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 

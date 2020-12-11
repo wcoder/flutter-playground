@@ -1,5 +1,5 @@
-import 'package:ble_app/device_page.dart';
-import 'package:ble_app/widgets/scan_result_tile.dart';
+import 'package:ble_app/flutter_blue/device_page.dart';
+import 'package:ble_app/flutter_blue/widgets/scan_result_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
