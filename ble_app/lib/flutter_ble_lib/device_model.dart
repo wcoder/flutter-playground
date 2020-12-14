@@ -13,8 +13,6 @@ class DeviceModel extends ChangeNotifier {
 
   StreamSubscription<ScanResult> _scanSubscription;
 
-  String get test => "test string";
-
   DeviceModel() {
     Fimber.d("Init device model");
     _bleManager
@@ -67,9 +65,14 @@ class DeviceModel extends ChangeNotifier {
   bool get deviceFound => device != null;
   bool isConnected = false;
   String temperature = "--";
+  bool searching = false;
+  bool isCelsiusFormat = false;
 
   void _startScan() {
     Fimber.d("Ble client created");
+
+    searching = true;
+    notifyListeners();
 
     _scanSubscription = _bleManager.startPeripheralScan().listen(
       (ScanResult scanResult) {
@@ -79,6 +82,7 @@ class DeviceModel extends ChangeNotifier {
 
           if (scanResult.advertisementData.localName == "Thermometer") {
             device = scanResult.peripheral;
+            searching = false;
             notifyListeners();
 
             _scanSubscription.cancel();
@@ -101,6 +105,10 @@ class DeviceModel extends ChangeNotifier {
     }
   }
 
+  final _serviceUuid = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  final _tempoValueCharacteristicUuid = "00000002-710e-4a5b-8d75-3e5b444bc3cf";
+  final _tempoFormatCharacteristicUuid = "00000003-710e-4a5b-8d75-3e5b444bc3cf";
+
   Future<void> connect() async {
     device
         .observeConnectionState(
@@ -112,9 +120,12 @@ class DeviceModel extends ChangeNotifier {
           "Peripheral ${device.identifier} connection state is $connectionState");
     });
 
-    await device.connect();
-
     isConnected = await device.isConnected();
+
+    if (!isConnected) {
+      await device.connect();
+      isConnected = await device.isConnected();
+    }
     notifyListeners();
 
     await device.discoverAllServicesAndCharacteristics();
@@ -123,20 +134,43 @@ class DeviceModel extends ChangeNotifier {
     print(services);
 
     device
-        .monitorCharacteristic(
-      "00000001-710e-4a5b-8d75-3e5b444bc3cf",
-      "00000002-710e-4a5b-8d75-3e5b444bc3cf",
-    )
+        .monitorCharacteristic(_tempoValueCharacteristicUuid, _serviceUuid)
         .listen((event) {
       final value = utf8.decode(event.value);
       temperature = value;
       notifyListeners();
+
+      _updateFormatInfo();
     });
   }
 
   Future<void> disconnect() async {
     await device.disconnectOrCancelConnection();
     isConnected = false;
+    isCelsiusFormat = false;
+    temperature = "--";
+    notifyListeners();
+  }
+
+  Future<void> useCelsiusFormat(bool isCelsius) async {
+    final format = isCelsius ? "C" : "F";
+    final value = utf8.encode(format);
+    await device.writeCharacteristic(
+      _serviceUuid,
+      _tempoFormatCharacteristicUuid,
+      value,
+      false,
+    );
+    await _updateFormatInfo();
+  }
+
+  Future<void> _updateFormatInfo() async {
+    var response = await device.readCharacteristic(
+      _serviceUuid,
+      _tempoFormatCharacteristicUuid,
+    );
+    var responseString = utf8.decode(response.value);
+    isCelsiusFormat = responseString == "C";
     notifyListeners();
   }
 }

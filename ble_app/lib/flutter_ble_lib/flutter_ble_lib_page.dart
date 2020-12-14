@@ -35,10 +35,38 @@ class FlutterBleLibPage extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: Text(
-          context.watch<DeviceModel>().temperature,
-          style: Theme.of(context).textTheme.headline2,
-        ),
+        child: context.watch<DeviceModel>().searching
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 10),
+                  Text("searching device...")
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    context.watch<DeviceModel>().temperature,
+                    style: Theme.of(context).textTheme.headline2,
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("F"),
+                      Switch(
+                        value: context.watch<DeviceModel>().isCelsiusFormat,
+                        onChanged: (value) => {
+                          context.read<DeviceModel>().useCelsiusFormat(value)
+                        },
+                      ),
+                      Text("C"),
+                    ],
+                  ),
+                ],
+              ),
       ),
     );
   }
