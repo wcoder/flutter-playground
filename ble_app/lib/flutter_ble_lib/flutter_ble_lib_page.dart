@@ -56,12 +56,14 @@ class FlutterBleLibPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("F"),
-                      Switch(
-                        value: context.watch<DeviceModel>().isCelsiusFormat,
-                        onChanged: (value) => {
-                          context.read<DeviceModel>().useCelsiusFormat(value)
-                        },
-                      ),
+                      Consumer<DeviceModel>(builder: (context, model, child) {
+                        return Switch(
+                          value: model.isCelsiusFormat,
+                          onChanged: model.isConnected
+                              ? (value) => {model.useCelsiusFormat(value)}
+                              : null,
+                        );
+                      }),
                       Text("C"),
                     ],
                   ),

@@ -12,9 +12,13 @@ class DeviceModel extends ChangeNotifier {
   PermissionStatus _locationPermissionStatus;
 
   StreamSubscription<ScanResult> _scanSubscription;
+  StreamSubscription<CharacteristicWithValue> _monitorTempoSubscription;
+  StreamSubscription<PeripheralConnectionState>
+      _deviceConnectionStateSubscription;
 
   DeviceModel() {
     Fimber.d("Init device model");
+    _bleManager.setLogLevel(LogLevel.verbose);
     _bleManager
         .createClient(
           restoreStateIdentifier: "example-restore-state-identifier",
@@ -31,10 +35,14 @@ class DeviceModel extends ChangeNotifier {
         .then((_) => _startScan());
   }
 
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _scanSubscription?.cancel();
+    _monitorTempoSubscription?.cancel();
+    _deviceConnectionStateSubscription?.cancel();
+    _bleManager.destroyClient();
+    super.dispose();
+  }
 
   Future<void> _checkPermissions() async {
     if (Platform.isAndroid) {
@@ -76,25 +84,23 @@ class DeviceModel extends ChangeNotifier {
 
     _scanSubscription = _bleManager.startPeripheralScan().listen(
       (ScanResult scanResult) {
-        if (scanResult.advertisementData.localName != null) {
-          Fimber.d(
-              'found new device ${scanResult.advertisementData.localName} ${scanResult.peripheral.identifier}');
+        Fimber.d(
+            'found new device ${scanResult.advertisementData.localName} ${scanResult.peripheral.identifier}');
 
-          if (scanResult.advertisementData.localName == "Thermometer") {
-            device = scanResult.peripheral;
-            searching = false;
-            notifyListeners();
+        if (scanResult.advertisementData.localName == "Thermometer") {
+          device = scanResult.peripheral;
+          searching = false;
+          notifyListeners();
 
-            _scanSubscription.cancel();
-            _bleManager.stopPeripheralScan();
-          }
+          _scanSubscription.cancel();
+          _bleManager.stopPeripheralScan();
         }
       },
     );
   }
 
   Future<void> refresh() async {
-    _scanSubscription.cancel();
+    _scanSubscription?.cancel();
     await _bleManager.stopPeripheralScan();
 
     await _checkPermissions();
@@ -110,10 +116,10 @@ class DeviceModel extends ChangeNotifier {
   final _tempoFormatCharacteristicUuid = "00000003-710e-4a5b-8d75-3e5b444bc3cf";
 
   Future<void> connect() async {
-    device
+    _deviceConnectionStateSubscription = device
         .observeConnectionState(
       emitCurrentValue: true,
-      completeOnDisconnect: true,
+      // completeOnDisconnect: true,
     )
         .listen((connectionState) {
       Fimber.d(
@@ -121,7 +127,6 @@ class DeviceModel extends ChangeNotifier {
     });
 
     isConnected = await device.isConnected();
-
     if (!isConnected) {
       await device.connect();
       isConnected = await device.isConnected();
@@ -129,38 +134,45 @@ class DeviceModel extends ChangeNotifier {
     notifyListeners();
 
     await device.discoverAllServicesAndCharacteristics();
-
+    // await _runWithErrorHandling(() async {});
     var services = await device.services();
     print(services);
 
-    device
-        .monitorCharacteristic(_tempoValueCharacteristicUuid, _serviceUuid)
+    _monitorTempoSubscription = device
+        .monitorCharacteristic(
+      _serviceUuid,
+      _tempoValueCharacteristicUuid,
+      transactionId: "monitorCPU",
+    )
         .listen((event) {
       final value = utf8.decode(event.value);
       temperature = value;
       notifyListeners();
-
-      _updateFormatInfo();
     });
+
+    if (isCelsiusFormat == null) {
+      _updateFormatInfo();
+    }
   }
 
   Future<void> disconnect() async {
-    await device.disconnectOrCancelConnection();
-    isConnected = false;
-    isCelsiusFormat = false;
-    temperature = "--";
-    notifyListeners();
+    await _runWithErrorHandling(() async {
+      _monitorTempoSubscription.cancel();
+      _monitorTempoSubscription = null;
+      await device.disconnectOrCancelConnection();
+      isConnected = false;
+      isCelsiusFormat = false;
+      temperature = "--";
+      notifyListeners();
+    });
   }
 
   Future<void> useCelsiusFormat(bool isCelsius) async {
     final format = isCelsius ? "C" : "F";
     final value = utf8.encode(format);
     await device.writeCharacteristic(
-      _serviceUuid,
-      _tempoFormatCharacteristicUuid,
-      value,
-      false,
-    );
+        _serviceUuid, _tempoFormatCharacteristicUuid, value, false,
+        transactionId: "changeFormat");
     await _updateFormatInfo();
   }
 
@@ -168,9 +180,23 @@ class DeviceModel extends ChangeNotifier {
     var response = await device.readCharacteristic(
       _serviceUuid,
       _tempoFormatCharacteristicUuid,
+      transactionId: "getFormat",
     );
     var responseString = utf8.decode(response.value);
     isCelsiusFormat = responseString == "C";
     notifyListeners();
+  }
+
+  Future<void> _runWithErrorHandling(Function func) async {
+    try {
+      await func();
+    } on BleError catch (e) {
+      Fimber.e("BleError caught: ${e.errorCode.value} ${e.reason}", ex: e);
+    } catch (e) {
+      if (e is Error) {
+        debugPrintStack(stackTrace: e.stackTrace);
+      }
+      Fimber.e("${e.runtimeType}: $e", ex: e, stacktrace: e.stackTrace);
+    }
   }
 }
