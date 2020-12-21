@@ -27,7 +27,7 @@ enum DeviceConnectionState {
 enum DeviceSearchingState { unknown, searching, found }
 
 class DeviceManager {
-  static const DeviceIdentifier = "DC:A6:32:B8:51:FE";
+  static const DeviceIdentifier = "6A89CD01-62F1-A8A3-E7F2-F4E7F750C8A2";
   static const ServiceUuid = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
   static const TempoValueUuid = "00000002-710e-4a5b-8d75-3e5b444bc3cf";
   static const TempoFormatUuid = "00000003-710e-4a5b-8d75-3e5b444bc3cf";
@@ -181,6 +181,8 @@ class DeviceManager {
     _searchingStream.sink.add(DeviceSearchingState.searching);
 
     final deviceIdentifiers = [DeviceIdentifier];
+    // var a = await _bleManager.connectedPeripherals([ServiceUuid]); // TODO !!!
+    // print(a);
     final knownDevices = await _bleManager.knownPeripherals(deviceIdentifiers);
 
     void _foundDevice(Peripheral peripheral) {
@@ -190,11 +192,13 @@ class DeviceManager {
 
     if (knownDevices.isEmpty) {
       Fimber.d("Start scanner...");
-      _scanSubscription = _bleManager
-          .startPeripheralScan(uuids: deviceIdentifiers)
-          .listen((scanResult) {
-        _cancelScan();
-        _foundDevice(scanResult.peripheral);
+      _scanSubscription =
+          _bleManager.startPeripheralScan() //(uuids: deviceIdentifiers)
+              .listen((scanResult) {
+        if (scanResult.advertisementData.localName == "Thermometer") {
+          _cancelScan();
+          _foundDevice(scanResult.peripheral);
+        }
       });
     } else {
       Fimber.d("Found known device");
@@ -203,10 +207,9 @@ class DeviceManager {
   }
 
   Future<void> _cancelScan() async {
-    Fimber.d("Cencel scanner...");
+    Fimber.d("Cancel scanner...");
     await _scanSubscription?.cancel();
     await _bleManager.stopPeripheralScan();
-    _searchingStream.sink.add(DeviceSearchingState.unknown);
   }
 
   DeviceConnectionState _convertConnectionState(

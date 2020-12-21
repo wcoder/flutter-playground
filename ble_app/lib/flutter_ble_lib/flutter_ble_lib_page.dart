@@ -1,74 +1,33 @@
-import 'package:ble_app/flutter_ble_lib/device_model.dart';
+import 'package:ble_app/flutter_ble_lib/device_manager.dart';
+import 'package:ble_app/flutter_ble_lib/device_page.dart';
+import 'package:ble_app/no_bluetooth_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class FlutterBleLibPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("flutter_ble_lib"),
-        actions: [
-          Consumer<DeviceModel>(
-            builder: (context, model, child) {
-              if (model.deviceFound) {
-                Function onPressed =
-                    model.isConnected ? model.disconnect : model.connect;
-                var icon = model.isConnected
-                    ? Icons.bluetooth_connected
-                    : Icons.bluetooth;
-                return IconButton(
-                  onPressed: () async => await onPressed(),
-                  icon: Icon(icon),
-                );
-              }
-              return Container();
-            },
-          ),
-          IconButton(
-            onPressed: () => context.read<DeviceModel>().refresh(),
-            icon: Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: Center(
-        child: context.watch<DeviceModel>().searching
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 10),
-                  Text("searching device...")
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    context.watch<DeviceModel>().temperature,
-                    style: Theme.of(context).textTheme.headline2,
+    return Consumer<BleConnectionState>(
+      builder: (context, connectionState, child) {
+        if (connectionState == BleConnectionState.powered_on) {
+          return DevicePage();
+        }
+        if (connectionState == BleConnectionState.powered_off) {
+          return NoBluetoothPage();
+        }
+        return Scaffold(
+          body: Center(
+            child: connectionState == BleConnectionState.resetting
+                ? CircularProgressIndicator()
+                : Text(
+                    "BLE status: $connectionState",
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
                   ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("F"),
-                      Consumer<DeviceModel>(
-                        builder: (context, model, child) {
-                          return Switch(
-                            value: model.isCelsiusFormat,
-                            onChanged: model.isConnected
-                                ? (value) => model.useCelsiusFormat(value)
-                                : null,
-                          );
-                        },
-                      ),
-                      Text("C"),
-                    ],
-                  ),
-                ],
-              ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
