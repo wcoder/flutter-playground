@@ -12,17 +12,14 @@ class FlutterBleLibPage extends StatelessWidget {
           Consumer<DeviceModel>(
             builder: (context, model, child) {
               if (model.deviceFound) {
+                Function onPressed =
+                    model.isConnected ? model.disconnect : model.connect;
+                var icon = model.isConnected
+                    ? Icons.bluetooth_connected
+                    : Icons.bluetooth;
                 return IconButton(
-                  onPressed: () {
-                    if (model.isConnected) {
-                      model.disconnect();
-                    } else {
-                      model.connect();
-                    }
-                  },
-                  icon: Icon(model.isConnected
-                      ? Icons.bluetooth_connected
-                      : Icons.bluetooth),
+                  onPressed: () async => await onPressed(),
+                  icon: Icon(icon),
                 );
               }
               return Container();
@@ -56,14 +53,16 @@ class FlutterBleLibPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("F"),
-                      Consumer<DeviceModel>(builder: (context, model, child) {
-                        return Switch(
-                          value: model.isCelsiusFormat,
-                          onChanged: model.isConnected
-                              ? (value) => {model.useCelsiusFormat(value)}
-                              : null,
-                        );
-                      }),
+                      Consumer<DeviceModel>(
+                        builder: (context, model, child) {
+                          return Switch(
+                            value: model.isCelsiusFormat,
+                            onChanged: model.isConnected
+                                ? (value) => model.useCelsiusFormat(value)
+                                : null,
+                          );
+                        },
+                      ),
                       Text("C"),
                     ],
                   ),

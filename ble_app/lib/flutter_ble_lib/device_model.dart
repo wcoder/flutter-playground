@@ -6,6 +6,7 @@ import 'package:fimber/fimber.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:synchronized/extension.dart';
 
 class DeviceModel extends ChangeNotifier {
   var _bleManager = BleManager();
@@ -135,24 +136,18 @@ class DeviceModel extends ChangeNotifier {
 
     await device.discoverAllServicesAndCharacteristics();
     // await _runWithErrorHandling(() async {});
-    var services = await device.services();
+    final services = await device.services();
     print(services);
 
     _monitorTempoSubscription = device
-        .monitorCharacteristic(
-      _serviceUuid,
-      _tempoValueCharacteristicUuid,
-      transactionId: "monitorCPU",
-    )
+        .monitorCharacteristic(_serviceUuid, _tempoValueCharacteristicUuid,
+            transactionId: "monitorCPU")
         .listen((event) {
       final value = utf8.decode(event.value);
       temperature = value;
       notifyListeners();
-    });
-
-    if (isCelsiusFormat == null) {
       _updateFormatInfo();
-    }
+    });
   }
 
   Future<void> disconnect() async {
@@ -170,20 +165,32 @@ class DeviceModel extends ChangeNotifier {
   Future<void> useCelsiusFormat(bool isCelsius) async {
     final format = isCelsius ? "C" : "F";
     final value = utf8.encode(format);
-    await device.writeCharacteristic(
-        _serviceUuid, _tempoFormatCharacteristicUuid, value, false,
-        transactionId: "changeFormat");
-    await _updateFormatInfo();
+    synchronized(() async {
+      isCelsiusFormat = isCelsius;
+      notifyListeners();
+      final characteristic = await device.writeCharacteristic(
+          _serviceUuid, _tempoFormatCharacteristicUuid, value, true,
+          transactionId: "changeFormat");
+      final response = await characteristic.read(transactionId: "readFormat");
+      final responseString = utf8.decode(response);
+      _changeCelsiusFormat(responseString);
+    });
   }
 
   Future<void> _updateFormatInfo() async {
-    var response = await device.readCharacteristic(
-      _serviceUuid,
-      _tempoFormatCharacteristicUuid,
-      transactionId: "getFormat",
-    );
-    var responseString = utf8.decode(response.value);
-    isCelsiusFormat = responseString == "C";
+    synchronized(() async {
+      final response = await device.readCharacteristic(
+        _serviceUuid,
+        _tempoFormatCharacteristicUuid,
+        transactionId: "getFormat",
+      );
+      final responseString = utf8.decode(response.value);
+      _changeCelsiusFormat(responseString);
+    });
+  }
+
+  void _changeCelsiusFormat(String str) {
+    isCelsiusFormat = str == "C";
     notifyListeners();
   }
 
