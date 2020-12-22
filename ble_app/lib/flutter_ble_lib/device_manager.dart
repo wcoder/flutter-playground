@@ -40,7 +40,10 @@ class DeviceManager {
   Peripheral _device;
   bool _isConnected = false;
 
-  DeviceManager() {
+  static DeviceManager _instance = DeviceManager._();
+  static DeviceManager get instance => _instance;
+
+  DeviceManager._() {
     _initBle();
   }
 

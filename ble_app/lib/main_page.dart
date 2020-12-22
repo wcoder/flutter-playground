@@ -1,4 +1,3 @@
-import 'package:ble_app/flutter_ble_lib/device_manager.dart';
 import 'package:ble_app/flutter_ble_lib/flutter_ble_lib_page.dart';
 import 'package:ble_app/flutter_blue/flutter_blue_page.dart';
 import 'package:flutter/material.dart';
@@ -29,15 +28,10 @@ class MainPage extends StatelessWidget {
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) {
-                    final model = DeviceModel();
                     return MultiProvider(
                       providers: [
-                        ChangeNotifierProvider<DeviceModel>.value(
-                          value: model,
-                        ),
-                        StreamProvider<BleConnectionState>.value(
-                          initialData: BleConnectionState.unknown,
-                          value: model.bleConnection,
+                        ChangeNotifierProvider<DeviceModel>(
+                          create: (_) => DeviceModel(),
                         ),
                       ],
                       child: FlutterBleLibPage(),
