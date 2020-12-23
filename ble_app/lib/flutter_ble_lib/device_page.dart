@@ -6,61 +6,98 @@ import 'package:provider/provider.dart';
 class DevicePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("flutter_ble_lib"),
-        actions: [
-          Consumer<DeviceModel>(
-            builder: (context, model, child) {
-              if (model.isDeviceFound) {
-                return StreamBuilder(
-                  stream: model.deviceConnection,
-                  initialData: DeviceConnectionState.unknown,
-                  builder: (context, connectionSnapshot) {
-                    if (connectionSnapshot.data ==
-                        DeviceConnectionState.unknown) {
-                      return Container();
-                    }
-                    if (connectionSnapshot.data ==
-                            DeviceConnectionState.connecting ||
-                        connectionSnapshot.data ==
-                            DeviceConnectionState.disconnecting) {
-                      return CircularProgressIndicator();
-                    }
-                    final isConnected = connectionSnapshot.data ==
-                        DeviceConnectionState.connected;
-                    var onPressed =
-                        isConnected ? model.disconnect : model.connect;
-                    var icon = isConnected
-                        ? Icons.bluetooth_connected
-                        : Icons.bluetooth;
-                    return IconButton(
-                      onPressed: () async => await onPressed(),
-                      icon: Icon(icon),
-                    );
-                  },
+    return ChangeNotifierProvider<DeviceModel>(
+      create: (_) => DeviceModel(),
+      builder: (context, child) => Scaffold(
+        appBar: AppBar(
+          title: Text("flutter_ble_lib"),
+          actions: [
+            _ConnectionButton(),
+            Consumer<DeviceModel>(
+              builder: (context, model, _) {
+                return IconButton(
+                  onPressed: model.isDeviceFound
+                      ? null
+                      : () => context.read<DeviceModel>().rescan(),
+                  icon: Icon(Icons.refresh),
                 );
-              }
-              return Container();
+              },
+            ),
+          ],
+        ),
+        body: Center(
+          child: Consumer<DeviceModel>(
+            builder: (context, model, snapshot) {
+              return model.isDeviceFound
+                  ? model.isDeviceConnected
+                      ? _DeviceWidget()
+                      : Text("Device found, not connected")
+                  : const _SearchingWidget();
             },
           ),
-          IconButton(
-            onPressed: () => context.read<DeviceModel>().rescan(),
-            icon: Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Consumer<DeviceModel>(
-          builder: (context, model, snapshot) {
-            return model.isDeviceFound
-                ? model.isDeviceConnected
-                    ? _DeviceWidget()
-                    : Text("not connected")
-                : const _SearchingWidget();
-          },
         ),
       ),
+    );
+  }
+}
+
+class _ConnectionButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<DeviceModel>(
+      builder: (context, model, child) {
+        if (!model.isDeviceFound) {
+          return Container();
+        }
+
+        return StreamBuilder(
+          stream: model.deviceConnection,
+          builder: (context, snapshot) {
+            final state = snapshot.data;
+
+            if (state == DeviceConnectionState.unknown) {
+              return Container();
+            }
+
+            if (state == DeviceConnectionState.connecting ||
+                state == DeviceConnectionState.disconnecting) {
+              return const _AppBarCircularProgressIndicator();
+            }
+
+            final isConnected = state == DeviceConnectionState.connected;
+            final onPressed = isConnected ? model.disconnect : model.connect;
+            final icon =
+                isConnected ? Icons.bluetooth_connected : Icons.bluetooth;
+            return IconButton(
+              onPressed: () async => await onPressed(),
+              icon: Icon(icon),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _AppBarCircularProgressIndicator extends StatelessWidget {
+  const _AppBarCircularProgressIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Container(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -71,12 +108,14 @@ class _DeviceWidget extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        StreamBuilder(
-          stream: context.watch<DeviceModel>().temperature,
-          initialData: "---",
-          builder: (context, snapshot) => Text(
-            snapshot.data == null ? "null" : snapshot.data,
-            style: Theme.of(context).textTheme.headline2,
+        Consumer<DeviceModel>(
+          builder: (context, value, child) => StreamBuilder(
+            stream: value.temperature,
+            initialData: "---",
+            builder: (context, snapshot) => Text(
+              snapshot.data,
+              style: Theme.of(context).textTheme.headline2,
+            ),
           ),
         ),
         SizedBox(height: 20),
@@ -85,14 +124,15 @@ class _DeviceWidget extends StatelessWidget {
           children: [
             Text("F"),
             Consumer<DeviceModel>(
-              builder: (context, model, child) {
-                return Switch(
-                  value: false, //model.isCelsiusFormat,
-                  onChanged: null, //model.isConnected
-                  // ? null //(value) => model.useCelsiusFormat(value)
-                  // : null,
-                );
-              },
+              builder: (context, model, child) => ValueListenableBuilder(
+                valueListenable: model.isCelsiusFormat,
+                builder: (context, value, child) => Switch(
+                  value: value,
+                  onChanged: model.isDeviceConnected
+                      ? (v) => model.useCelsiusFormat(v)
+                      : null,
+                ),
+              ),
             ),
             Text("C"),
           ],

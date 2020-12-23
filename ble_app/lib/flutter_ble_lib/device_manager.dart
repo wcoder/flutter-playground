@@ -28,48 +28,65 @@ enum DeviceSearchingState { unknown, searching, found }
 
 class DeviceManager {
   static const DeviceIdentifier = "6A89CD01-62F1-A8A3-E7F2-F4E7F750C8A2";
+  static const DeviceLocalName = "Thermometer";
   static const ServiceUuid = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
   static const TempoValueUuid = "00000002-710e-4a5b-8d75-3e5b444bc3cf";
   static const TempoFormatUuid = "00000003-710e-4a5b-8d75-3e5b444bc3cf";
 
   final _bleManager = BleManager();
 
-  final _searchingStream = StreamController<DeviceSearchingState>();
+  // stream controllers of public streams
+  final _searchDeviceController = StreamController<DeviceSearchingState>();
+  final _deviceConnectionController = StreamController<DeviceConnectionState>();
+  final _temperatureController = StreamController<String>.broadcast();
 
+  // internal subscriptions
   StreamSubscription<ScanResult> _scanSubscription;
+  StreamSubscription<PeripheralConnectionState> _deviceConectionSubscription;
+  StreamSubscription<CharacteristicWithValue> _temperatureSubscription;
+
   Peripheral _device;
   bool _isConnected = false;
 
-  static DeviceManager _instance = DeviceManager._();
-  static DeviceManager get instance => _instance;
+  // lazy singleton
+
+  static DeviceManager _instance;
+  static DeviceManager get instance {
+    if (_instance == null) {
+      _instance = DeviceManager._();
+    }
+    return _instance;
+  }
 
   DeviceManager._() {
     _initBle();
   }
+
+  // public streams
 
   Stream<BleConnectionState> get bleConnection => _bleManager
       .observeBluetoothState(
         emitCurrentValue: true,
       )
       .map(_convertBleConnectionState);
-  Stream<DeviceConnectionState> get connection => _device
-      .observeConnectionState(
-        emitCurrentValue: true,
-      )
-      .map(_convertConnectionState);
-  Stream<DeviceSearchingState> get searching => _searchingStream.stream;
-  Stream<String> get temperature => _device
-      .monitorCharacteristic(
-        ServiceUuid,
-        TempoValueUuid,
-        transactionId: "monitorCPU",
-      )
-      .map((event) => utf8.decode(event.value));
+
+  Stream<DeviceConnectionState> get connection =>
+      _deviceConnectionController.stream;
+
+  Stream<DeviceSearchingState> get searching => _searchDeviceController.stream;
+
+  Stream<String> get temperature => _temperatureController.stream;
+
+  // public methods
 
   Future<void> dispose() async {
-    await _searchingStream.close();
+    await _searchDeviceController.close();
+    await _deviceConnectionController.close();
+    await _temperatureController.close();
 
     await _scanSubscription?.cancel();
+    await _deviceConectionSubscription?.cancel();
+    await _temperatureSubscription?.cancel();
 
     await _bleManager.destroyClient();
   }
@@ -94,14 +111,14 @@ class DeviceManager {
     await _device.discoverAllServicesAndCharacteristics();
     final services = await _device.services();
     Fimber.d(services.toString());
+
+    await _subscribeOnTemperatureCharacteristic();
   }
 
   Future<void> disconnect() async {
     await _runWithErrorHandling(() async {
       await _device.disconnectOrCancelConnection();
       _isConnected = false;
-      // isCelsiusFormat = false;
-      // temperature = "--";
     });
   }
 
@@ -121,6 +138,8 @@ class DeviceManager {
       return responseString;
     });
   }
+
+  // private methods
 
   void _initBle() {
     Fimber.d("Init BLE");
@@ -181,38 +200,72 @@ class DeviceManager {
   }
 
   void _startScan() async {
-    _searchingStream.sink.add(DeviceSearchingState.searching);
+    _searchDeviceController.sink.add(DeviceSearchingState.searching);
 
     final deviceIdentifiers = [DeviceIdentifier];
-    // var a = await _bleManager.connectedPeripherals([ServiceUuid]); // TODO !!!
-    // print(a);
-    final knownDevices = await _bleManager.knownPeripherals(deviceIdentifiers);
 
     void _foundDevice(Peripheral peripheral) {
       _device = peripheral;
-      _searchingStream.sink.add(DeviceSearchingState.found);
+      _searchDeviceController.sink.add(DeviceSearchingState.found);
+      _subscribeOnDeviceEvents();
     }
 
-    if (knownDevices.isEmpty) {
-      Fimber.d("Start scanner...");
-      _scanSubscription =
-          _bleManager.startPeripheralScan() //(uuids: deviceIdentifiers)
-              .listen((scanResult) {
-        if (scanResult.advertisementData.localName == "Thermometer") {
-          _cancelScan();
-          _foundDevice(scanResult.peripheral);
-        }
-      });
-    } else {
+    final connectedDevices =
+        await _bleManager.connectedPeripherals([ServiceUuid]);
+    if (connectedDevices.isNotEmpty) {
+      Fimber.d("Found connected device");
+      _foundDevice(connectedDevices.first);
+      return;
+    }
+
+    final knownDevices = await _bleManager.knownPeripherals(deviceIdentifiers);
+    if (knownDevices.isNotEmpty) {
       Fimber.d("Found known device");
       _foundDevice(knownDevices.first);
+      return;
     }
+
+    Fimber.d("Start scanner...");
+    _scanSubscription = _bleManager.startPeripheralScan().listen((scanResult) {
+      if (scanResult.advertisementData.localName == DeviceLocalName) {
+        _cancelScan();
+        _foundDevice(scanResult.peripheral);
+      }
+    });
   }
 
   Future<void> _cancelScan() async {
     Fimber.d("Cancel scanner...");
     await _scanSubscription?.cancel();
     await _bleManager.stopPeripheralScan();
+  }
+
+  Future<void> _subscribeOnDeviceEvents() async {
+    await _deviceConectionSubscription?.cancel();
+    _deviceConectionSubscription =
+        _device.observeConnectionState(emitCurrentValue: true).listen((event) {
+      _deviceConnectionController.sink.add(_convertConnectionState(event));
+    });
+
+    _isConnected = await _device.isConnected();
+    if (_isConnected) {
+      await _subscribeOnTemperatureCharacteristic();
+    }
+  }
+
+  Future<void> _subscribeOnTemperatureCharacteristic() async {
+    await _temperatureSubscription?.cancel();
+    await _bleManager.cancelTransaction("monitorCPU");
+    _temperatureSubscription = _device
+        .monitorCharacteristic(
+      ServiceUuid,
+      TempoValueUuid,
+      transactionId: "monitorCPU",
+    )
+        .listen((event) {
+      final temperature = utf8.decode(event.value);
+      _temperatureController.sink.add(temperature);
+    });
   }
 
   DeviceConnectionState _convertConnectionState(
