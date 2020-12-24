@@ -36,8 +36,10 @@ class DeviceManager {
   final _bleManager = BleManager();
 
   // stream controllers of public streams
-  final _searchDeviceController = StreamController<DeviceSearchingState>();
-  final _deviceConnectionController = StreamController<DeviceConnectionState>();
+  final _searchDeviceController =
+      StreamController<DeviceSearchingState>.broadcast();
+  final _deviceConnectionController =
+      StreamController<DeviceConnectionState>.broadcast();
   final _temperatureController = StreamController<String>.broadcast();
 
   // internal subscriptions
@@ -148,6 +150,7 @@ class DeviceManager {
           restoreStateIdentifier: "example-restore-state-identifier",
           restoreStateAction: (peripherals) {
             peripherals?.forEach((peripheral) {
+              // TODO: reinit device + subscriptions
               Fimber.d("Restored peripheral: ${peripheral.name}");
             });
           },
@@ -210,6 +213,7 @@ class DeviceManager {
       _subscribeOnDeviceEvents();
     }
 
+    // used on Android
     final connectedDevices =
         await _bleManager.connectedPeripherals([ServiceUuid]);
     if (connectedDevices.isNotEmpty) {
@@ -218,6 +222,7 @@ class DeviceManager {
       return;
     }
 
+    // used on iOS
     final knownDevices = await _bleManager.knownPeripherals(deviceIdentifiers);
     if (knownDevices.isNotEmpty) {
       Fimber.d("Found known device");

@@ -43,6 +43,8 @@ class DeviceModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    isCelsiusFormat.dispose();
+
     _searchingSubscription?.cancel();
     _connectionSubscription?.cancel();
     _deviceConnectionController.close();

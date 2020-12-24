@@ -9,18 +9,20 @@ class FlutterBleLibPage extends StatelessWidget {
     return StreamBuilder<BleConnectionState>(
       stream: DeviceManager.instance.bleConnection,
       builder: (context, snapshot) {
-        if (snapshot.data == BleConnectionState.powered_on) {
+        final state = snapshot.data;
+        if (state == BleConnectionState.powered_on) {
           return DevicePage();
         }
-        if (snapshot.data == BleConnectionState.powered_off) {
+        if (state == BleConnectionState.powered_off ||
+            state == BleConnectionState.unsupported) {
           return NoBluetoothPage();
         }
         return Scaffold(
           body: Center(
-            child: snapshot.data == BleConnectionState.resetting
+            child: state == BleConnectionState.resetting
                 ? CircularProgressIndicator()
                 : Text(
-                    "BLE status: ${snapshot.data}",
+                    "BLE status: $state",
                     style: TextStyle(
                       color: Colors.red,
                     ),
