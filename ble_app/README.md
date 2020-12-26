@@ -10,3 +10,9 @@ Libraries:
   - [flutter_fimber](https://pub.dev/packages/flutter_fimber) — logs
   - [permission_handler](https://pub.dev/packages/permission_handler) — location permissions
   - [synchronized](https://pub.dev/packages/synchronized) — async locks
+
+[Issues](https://github.com/wcoder/flutter-playground/issues?q=is%3Aissue+ble_app)
+
+---
+
+&copy; 2020
