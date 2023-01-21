@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
   meta: ^1.1.7
   equatable: ^0.6.1
-  http: ^0.12.0+2
+  http: ">=0.12.0+2 <0.14.0"
   shared_preferences: ^0.5.3+4
   get_it: ^3.0.1
   provider: ^4.0.1
@@ -19,7 +19,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^4.1.1
+  mockito: ">=4.1.1 <6.0.0"
 
 flutter:
 
