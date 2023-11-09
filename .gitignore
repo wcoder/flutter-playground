@@ -292,3 +292,8 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.gitignore.io/api/xcode,linux,macos,windows,flutter,androidstudio,visualstudiocode
+
+# Custom
+
+## FVM
+**/.fvm/flutter_sdk
