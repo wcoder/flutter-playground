@@ -93,6 +93,14 @@ class _TcpScreenState extends State<TcpScreen> {
 
         clientSocket.write('response: $event\n');
       },
+      onDone: () {
+        print('XXX: ${clientSocket.remoteAddress}: disconnected');
+
+        setState(() {
+          final clientAddress = ClientAddress(clientSocket);
+          _clients.remove(clientAddress);
+        });
+      },
       onError: (error) {
         print('XXX: $clientSocket: $error');
       },
