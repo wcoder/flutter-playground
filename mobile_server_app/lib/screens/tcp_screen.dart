@@ -18,7 +18,6 @@ class _TcpScreenState extends State<TcpScreen> {
 
   String _statusText = 'Starting server on port $_port...';
   StreamSubscription<Socket>? _serverSocketSubscription;
-  Timer? _pingTimer;
 
   @override
   void initState() {
@@ -36,14 +35,6 @@ class _TcpScreenState extends State<TcpScreen> {
       setState(() {
         _statusText = 'Ready on port $_port';
       });
-
-      // TODO: add handling clients disconnection
-      // _pingTimer = Timer.periodic(
-      //   const Duration(milliseconds: 1000),
-      //   (timer) {
-      //     _pingAllClients();
-      //   },
-      // );
     }).catchError((error) {
       setState(() {
         _statusText = error.toString();
@@ -55,8 +46,6 @@ class _TcpScreenState extends State<TcpScreen> {
 
   @override
   void dispose() {
-    _pingTimer?.cancel();
-
     Future.microtask(() async {
       for (var x in _clients.entries) {
         await x.value.disconnect();
@@ -122,22 +111,6 @@ class _TcpScreenState extends State<TcpScreen> {
       _clients[client.address] = client;
     });
   }
-
-  // void _pingAllClients() {
-  //   for (final clientEntity in _clients.entries) {
-  //     try {
-  //       final option = RawSocketOption(
-  //         RawSocketOption.levelSocket,
-  //         0x1008, // SO_TYPE - get socket type
-  //         clientEntity.value.socket.remoteAddress.rawAddress,
-  //       );
-  //       final result = clientEntity.value.socket.getRawOption(option);
-  //       print(result);
-  //     } catch (e) {
-  //       print(e);
-  //     }
-  //   }
-  // }
 }
 
 class TcpClient {
