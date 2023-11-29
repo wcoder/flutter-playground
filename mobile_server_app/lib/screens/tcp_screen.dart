@@ -14,7 +14,7 @@ class TcpScreen extends StatefulWidget {
 class _TcpScreenState extends State<TcpScreen> {
   static const int _port = 4041;
 
-  final Map<String, TcpClient> _clients = {};
+  final Map<ClientAddress, TcpClient> _clients = {};
 
   String _statusText = 'Starting server on port $_port...';
   StreamSubscription<Socket>? _serverSocketSubscription;
@@ -117,12 +117,35 @@ class TcpClient {
   final Socket socket;
   final StreamSubscription<Object> subscription;
 
-  String get address => '${socket.remoteAddress.address}:${socket.remotePort}';
+  late ClientAddress address;
 
-  TcpClient({required this.socket, required this.subscription});
+  TcpClient({required this.socket, required this.subscription}) {
+    address = ClientAddress(socket);
+  }
 
   Future<void> disconnect() async {
     await subscription.cancel();
     socket.destroy();
   }
+}
+
+class ClientAddress {
+  late String _address;
+
+  ClientAddress(Socket socket) {
+    _address = '${socket.remoteAddress.address}:${socket.remotePort}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ClientAddress && other._address == _address;
+  }
+
+  @override
+  int get hashCode => _address.hashCode;
+
+  @override
+  String toString() => _address;
 }
