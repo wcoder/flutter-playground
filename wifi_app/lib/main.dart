@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:open_settings_plus/open_settings_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _wifiSubmask;
   String? _wifiBroadcast;
   String? _wifiGateway;
+  List<WiFiAccessPoint> _accessPoints = [];
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +66,20 @@ class _MyHomePageState extends State<MyHomePage> {
           Text('Submask: $_wifiSubmask'),
           Text('Broadcast: $_wifiBroadcast'),
           Text('Gateway: $_wifiGateway'),
+          const Divider(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _accessPoints.length,
+              itemBuilder: (context, index) {
+                final item = _accessPoints[index];
+                return ListTile(
+                  title: Text(item.ssid),
+                  subtitle: Text(
+                      '${item.standard.name}   ${item.level}   ${item.capabilities}'),
+                );
+              },
+            ),
+          ),
         ],
       ),
       floatingActionButton: Column(
@@ -122,7 +138,39 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _getWifiList() async {
-    ///
+    final scanner = WiFiScan.instance;
+
+    setState(() {
+      _accessPoints = [];
+    });
+
+    final canScan = await scanner.canStartScan(askPermissions: true);
+    switch (canScan) {
+      case CanStartScan.yes:
+        final isScanning = await scanner.startScan();
+        if (!isScanning) {
+          print('XXX: no Wifi scan =(');
+          return;
+        }
+
+        await Future.delayed(const Duration(seconds: 5));
+
+        final can = await scanner.canGetScannedResults(askPermissions: true);
+        switch (can) {
+          case CanGetScannedResults.yes:
+            _accessPoints = await scanner.getScannedResults();
+            setState(() {});
+            break;
+          default:
+            print('XXX: Wifi scan results: $can');
+            break;
+        }
+
+        break;
+      default:
+        print('XXX: Wifi scan: $canScan');
+        break;
+    }
   }
 
   void _openWifiSettings() async {
