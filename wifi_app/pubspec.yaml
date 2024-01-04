@@ -39,6 +39,8 @@ dependencies:
   network_info_plus: ^4.1.0
   permission_handler: ^11.1.0
 
+  open_settings_plus: ^0.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

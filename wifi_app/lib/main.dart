@@ -1,7 +1,10 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:open_settings_plus/open_settings_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -77,6 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
             tooltip: 'Get WiFi List',
             child: const Icon(Icons.list),
           ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            onPressed: _openWifiSettings,
+            tooltip: 'Open WiFi Settings',
+            child: const Icon(Icons.settings),
+          ),
         ],
       ),
     );
@@ -114,5 +123,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _getWifiList() async {
     ///
+  }
+
+  void _openWifiSettings() async {
+    if (Platform.isAndroid) {
+      const settingsAndroid = OpenSettingsPlusAndroid();
+      await settingsAndroid.wifi();
+      return;
+    }
+    if (Platform.isIOS) {
+      const settingsiOS = OpenSettingsPlusIOS();
+      await settingsiOS.wifi();
+      return;
+    }
   }
 }
