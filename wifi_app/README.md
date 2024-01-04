@@ -1,16 +1,12 @@
 # wifi_app
 
-A new Flutter project.
+Features:
+- Get current/active WiFi info (Android / partly iOS)
+- Scan WiFi networks nearby (Android / limits on iOS)
+    - https://pub.dev/packages/wifi_scan
+    - https://pub.dev/packages/wifi_iot
+- Open WiFi settings (Android / iOS)
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+iOS 14+ restrictions:
+- Get the name of the Wi-Fi network to which the device is currently associated - https://developer.apple.com/forums/thread/679038?answerId=672831022#672831022
+- https://developer.apple.com/documentation/technotes/tn3111-ios-wifi-api-overview
